@@ -1,18 +1,25 @@
 import { Usuario } from "../models/usuarioModel.js";
+import bcrypt from "bcrypt";
 
 const usuario = new Usuario();
 
 export class UsuarioController {
+
   async criarUsuario(req, res) {
+    const saltRounds = 10;
+
     const { nomeUsuario, sobrenomeUsuario, emailUsuario, senhaUsuario } =
       req.body;
+
+    const senhaCriptografada = await bcrypt.hash(senhaUsuario, saltRounds);
+    console.log(senhaCriptografada);
 
     try {
       const novoUsuario = await usuario.cadastrarUsuario(
         nomeUsuario,
         sobrenomeUsuario,
         emailUsuario,
-        senhaUsuario
+        senhaCriptografada
       );
 
       if (!novoUsuario)
@@ -56,7 +63,11 @@ export class UsuarioController {
         senhaUsuario
       );
 
-      res.status(200).json(tokenDeAutenticacao);
+      if (!tokenDeAutenticacao)
+        res.status(404).json('Credenciais inválidas.');
+      else
+        res.status(200).json(tokenDeAutenticacao);
+      
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

@@ -4,6 +4,7 @@ import {
   encerrarConexaoBancoDeDadosPrisma,
 } from "../configs/mysql.js";
 import { AutenticacaoJWT } from "../utils/autenticacao.js";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -64,6 +65,8 @@ export class Usuario {
   }
 
   async realizarLogin(emailUsuario, senhaUsuario) {
+    const loginRealizadoComSucesso = false;
+
     try {
       await iniciarConexaoBancoDeDadosPrisma();
 
@@ -71,9 +74,11 @@ export class Usuario {
         where: { emailUsuario: emailUsuario },
       });
 
-      if (!verificarRegistro) return null;
+      if (!verificarRegistro) return loginRealizadoComSucesso;
 
-      if (verificarRegistro.senhaUsuario == senhaUsuario) {
+      const senhaValida = await bcrypt.compare(senhaUsuario, verificarRegistro.senhaUsuario);
+
+      if (senhaValida) {
         const autenticacao = new AutenticacaoJWT(process.env.SECRET_KEY);
         const token = autenticacao.gerarTokenJWT({
           idUsuario: verificarRegistro.chavePrimaria_idUsuario,
@@ -81,7 +86,7 @@ export class Usuario {
 
         return token;
       } else {
-        return null;
+        return loginRealizadoComSucesso;
       }
     } catch (error) {
       throw error;
