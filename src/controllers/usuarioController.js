@@ -12,7 +12,6 @@ export class UsuarioController {
       req.body;
 
     const senhaCriptografada = await bcrypt.hash(senhaUsuario, saltRounds);
-    console.log(senhaCriptografada);
 
     try {
       const novoUsuario = await usuario.cadastrarUsuario(
